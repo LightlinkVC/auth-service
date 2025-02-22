@@ -9,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lightlink/auth-service/internal/session/domain/dto"
@@ -54,14 +53,14 @@ func (h *SessionHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		Name:    "access_token",
 		Value:   createdSessionEntity.JWTAccess,
 		Path:    "/",
-		Expires: time.Now().Add(15 * time.Minute), /*TODO*/
+		Expires: createdSessionEntity.AccessExpiresAt, /*TODO*/
 		Secure:  false,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:    "refresh_token",
 		Value:   createdSessionEntity.JWTRefresh,
 		Path:    "/",
-		Expires: time.Now().Add(24 * time.Hour), /*TODO*/
+		Expires: createdSessionEntity.RefreshExpiresAt, /*TODO*/
 		Secure:  false,
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -69,6 +68,56 @@ func (h *SessionHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		Value:  strconv.Itoa(int(createdSessionEntity.UserID)),
 		Path:   "/",
 		Secure: false,
+	})
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *SessionHandler) Login(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		/*Handle*/
+		fmt.Println("body err")
+		return
+	}
+
+	loginRequest := &dto.LoginRequest{}
+	err = json.Unmarshal(body, loginRequest)
+	if err != nil {
+		/*Handle*/
+		fmt.Println("unmarshal err")
+		return
+	}
+
+	createdSessionEntity, err := h.sessionUC.Login(loginRequest)
+	if err != nil {
+		/*Handle*/
+		fmt.Println("login err", err)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    createdSessionEntity.JWTAccess,
+		Path:     "/",
+		Expires:  createdSessionEntity.AccessExpiresAt,
+		HttpOnly: true,
+		Secure:   true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    createdSessionEntity.JWTRefresh,
+		Path:     createdSessionEntity.JWTRefresh,
+		HttpOnly: true,
+		Secure:   true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_id",
+		Value:    strconv.Itoa(int(createdSessionEntity.UserID)),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
 	})
 
 	w.WriteHeader(http.StatusOK)
@@ -133,5 +182,53 @@ func (h *SessionHandler) Check(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("X-User-ID", userIDString)
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *SessionHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	refreshCookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		/*Handle*/
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Println("Refresh token missing")
+		return
+	}
+
+	tokenKey := []byte(os.Getenv("TOKEN_KEY"))
+	token, err := jwt.Parse(refreshCookie.Value, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method")
+		}
+		return tokenKey, nil
+	})
+	if err != nil || !token.Valid {
+		/*Handle*/
+		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Println("Invalid refresh token")
+		return
+	}
+
+	refreshedSession, err := h.sessionUC.RefreshSession(token)
+	if err != nil {
+		/*Handle*/
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "access_token",
+		Value:   refreshedSession.JWTAccess,
+		Path:    "/",
+		Expires: refreshedSession.AccessExpiresAt,
+		Secure:  false,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:    "refresh_token",
+		Value:   refreshedSession.JWTRefresh,
+		Path:    "/",
+		Expires: refreshedSession.RefreshExpiresAt,
+		Secure:  false,
+	})
+
 	w.WriteHeader(http.StatusOK)
 }

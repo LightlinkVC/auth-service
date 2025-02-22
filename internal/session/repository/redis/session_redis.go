@@ -25,7 +25,7 @@ func NewSessionRedisRepository(conn redis.Conn) *SessionRedisRepository {
 	}
 }
 
-func (repo *SessionRedisRepository) Create(sessionEntity *entity.Session) (*model.Session, error) {
+func (repo *SessionRedisRepository) Set(sessionEntity *entity.Session) (*model.Session, error) {
 	mkey := "sessions:" + strconv.Itoa(int(sessionEntity.UserID))
 
 	sessionModel := dto.SessionEntityToModel(sessionEntity)

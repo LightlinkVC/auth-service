@@ -6,7 +6,7 @@ import (
 )
 
 type SessionRepositoryI interface {
-	Create(sessionEntity *entity.Session) (*model.Session, error)
+	Set(sessionEntity *entity.Session) (*model.Session, error)
 	Check(userID uint) (*model.Session, error)
 	Delete(userID uint) error
 }

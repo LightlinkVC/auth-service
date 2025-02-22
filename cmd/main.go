@@ -50,6 +50,8 @@ func main() {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/signup", sessionHandler.Signup).Methods("POST")
+	router.HandleFunc("/api/login", sessionHandler.Login).Methods("POST")
+	router.HandleFunc("/api/refresh", sessionHandler.Refresh).Methods("GET")
 	router.HandleFunc("/api/check", sessionHandler.Check).Methods("GET")
 
 	log.Println("starting server at http://127.0.0.1:8082")
