@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/lightlink/auth-service/internal/session/domain/dto"
@@ -116,6 +117,52 @@ func (h *SessionHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Name:     "user_id",
 		Value:    strconv.Itoa(int(createdSessionEntity.UserID)),
 		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+	})
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *SessionHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	userIDString := r.Header.Get("X-User-ID")
+	userID64, err := strconv.ParseUint(userIDString, 10, 32)
+	if err != nil {
+		/*Handle*/
+		fmt.Println(err)
+		return
+	}
+
+	userID := uint(userID64)
+
+	err = h.sessionUC.Delete(userID)
+	if err != nil {
+		/*Handle*/
+		fmt.Println("uc logout err", err)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "user_id",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
 		Secure:   true,
 	})

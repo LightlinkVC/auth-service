@@ -51,6 +51,7 @@ func main() {
 
 	router.HandleFunc("/api/signup", sessionHandler.Signup).Methods("POST")
 	router.HandleFunc("/api/login", sessionHandler.Login).Methods("POST")
+	router.HandleFunc("/api/logout", sessionHandler.Logout).Methods("POST")
 	router.HandleFunc("/api/refresh", sessionHandler.Refresh).Methods("GET")
 	router.HandleFunc("/api/check", sessionHandler.Check).Methods("GET")
 

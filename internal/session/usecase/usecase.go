@@ -23,6 +23,7 @@ type SessionUsecaseI interface {
 	Signup(signupRequest *sessionDTO.SignupRequest) (*sessionEntity.Session, error)
 	Login(loginRequest *sessionDTO.LoginRequest) (*sessionEntity.Session, error)
 	RefreshSession(refreshToken *jwt.Token) (*sessionEntity.Session, error)
+	Delete(userID uint) error
 	/*TODO*/
 	// Create(signupRequest *sessionDTO.SignupRequest) (*sessionEntity.Session, error)
 	// Check(userID uint) (*sessionEntity.Session, error)
@@ -134,6 +135,15 @@ func (uc *SessionUsecase) Login(loginRequest *sessionDTO.LoginRequest) (*session
 	createdSessionEntity := sessionDTO.SessionModelToEntity(createdSessionModel)
 
 	return createdSessionEntity, nil
+}
+
+func (uc *SessionUsecase) Delete(userID uint) error {
+	err := uc.sessionRepo.Delete(userID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (uc *SessionUsecase) RefreshSession(refreshToken *jwt.Token) (*sessionEntity.Session, error) {
