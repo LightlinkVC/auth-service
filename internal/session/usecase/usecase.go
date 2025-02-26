@@ -211,8 +211,8 @@ func createJWT(username string, ttl time.Time, userID uint) (string, error) {
 			"username": username,
 			"id":       strconv.Itoa(int(userID)),
 		},
-		"iat": time.Now().Unix(),
-		"exp": ttl,
+		"iat": time.Now().UTC().Unix(),
+		"exp": ttl.UTC().Unix(),
 	})
 	tokenString, err := token.SignedString(jwtTokenKey)
 	if err != nil {
