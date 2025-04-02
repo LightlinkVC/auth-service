@@ -9,18 +9,18 @@ import (
 )
 
 type UserGrpcRepository struct {
-	Client proto.UserServiceClient
+	client proto.UserServiceClient
 }
 
 func NewUserGrpcRepository(client *proto.UserServiceClient) *UserGrpcRepository {
 	return &UserGrpcRepository{
-		Client: *client,
+		client: *client,
 	}
 }
 
 func (repo *UserGrpcRepository) Create(userEntity *entity.User) (*dto.UserTransfer, error) {
 	createUserRequest := dto.UserEntityToCreateRequest(userEntity)
-	userResponseProto, err := repo.Client.CreateUser(context.Background(), createUserRequest)
+	userResponseProto, err := repo.client.CreateUser(context.Background(), createUserRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (repo *UserGrpcRepository) GetById(id uint) (*dto.UserTransfer, error) {
 		Id: uint32(id),
 	}
 
-	userResponseProto, err := repo.Client.GetUserById(context.Background(), getUserByIdRequest)
+	userResponseProto, err := repo.client.GetUserById(context.Background(), getUserByIdRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (repo *UserGrpcRepository) GetByUsername(username string) (*dto.UserTransfe
 		Username: username,
 	}
 
-	userResponseProto, err := repo.Client.GetUserByUsername(context.Background(), getUserByUsernameRequest)
+	userResponseProto, err := repo.client.GetUserByUsername(context.Background(), getUserByUsernameRequest)
 	if err != nil {
 		return nil, err
 	}
