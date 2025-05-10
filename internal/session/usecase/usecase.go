@@ -102,9 +102,12 @@ func (uc *SessionUsecase) Login(loginRequest *sessionDTO.LoginRequest) (*session
 		return nil, err
 	}
 
-	_, err = uc.sessionRepo.Check(user.Id)
-	if err == sessionEntity.ErrAlreadyCreated {
-		return nil, sessionEntity.ErrAlreadyCreated
+	checkedSessionModel, err := uc.sessionRepo.Check(user.Id)
+	if err == nil {
+		return sessionDTO.SessionModelToEntity(checkedSessionModel), nil
+	}
+	if err != sessionEntity.ErrNoSession {
+		return nil, err
 	}
 
 	authDTO := sessionDTO.LoginRequestToAuthCredentialsDTO(loginRequest)
@@ -115,15 +118,6 @@ func (uc *SessionUsecase) Login(loginRequest *sessionDTO.LoginRequest) (*session
 		time.Now().Add(24*time.Hour),  /*TODO*/
 	)
 	if err != nil {
-		return nil, err
-	}
-
-	_, err = uc.sessionRepo.Check(uint(session.UserID))
-	if err == nil {
-		return nil, sessionEntity.ErrAlreadyCreated
-	}
-
-	if err != sessionEntity.ErrNoSession {
 		return nil, err
 	}
 
