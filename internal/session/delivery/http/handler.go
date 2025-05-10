@@ -31,6 +31,7 @@ func (h *SessionHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	if err != nil {
 		/*Handle*/
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println("body err")
 		return
 	}
@@ -39,6 +40,7 @@ func (h *SessionHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, signupRequest)
 	if err != nil {
 		/*Handle*/
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println("unmarshal err")
 		return
 	}
@@ -46,6 +48,7 @@ func (h *SessionHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	createdSessionEntity, err := h.sessionUC.Signup(signupRequest)
 	if err != nil {
 		/*Handle*/
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Println("session create err", err)
 		return
 	}
@@ -78,7 +81,7 @@ func (h *SessionHandler) Login(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		/*Handle*/
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println("body err")
 		return
 	}
@@ -87,6 +90,7 @@ func (h *SessionHandler) Login(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, loginRequest)
 	if err != nil {
 		/*Handle*/
+		w.WriteHeader(http.StatusBadRequest)
 		fmt.Println("unmarshal err")
 		return
 	}
@@ -94,31 +98,30 @@ func (h *SessionHandler) Login(w http.ResponseWriter, r *http.Request) {
 	createdSessionEntity, err := h.sessionUC.Login(loginRequest)
 	if err != nil {
 		/*Handle*/
+		w.WriteHeader(http.StatusUnauthorized)
 		fmt.Println("login err", err)
 		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "access_token",
-		Value:    createdSessionEntity.JWTAccess,
-		Path:     "/",
-		Expires:  createdSessionEntity.AccessExpiresAt,
-		HttpOnly: true,
-		Secure:   true,
+		Name:    "access_token",
+		Value:   createdSessionEntity.JWTAccess,
+		Path:    "/",
+		Expires: createdSessionEntity.AccessExpiresAt,
+		Secure:  false,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    createdSessionEntity.JWTRefresh,
-		Path:     createdSessionEntity.JWTRefresh,
-		HttpOnly: true,
-		Secure:   true,
+		Name:    "refresh_token",
+		Value:   createdSessionEntity.JWTRefresh,
+		Path:    "/",
+		Expires: createdSessionEntity.RefreshExpiresAt,
+		Secure:  false,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:     "user_id",
-		Value:    strconv.Itoa(int(createdSessionEntity.UserID)),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
+		Name:   "user_id",
+		Value:  strconv.Itoa(int(createdSessionEntity.UserID)),
+		Path:   "/",
+		Secure: false,
 	})
 
 	w.WriteHeader(http.StatusOK)
@@ -143,28 +146,25 @@ func (h *SessionHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "access_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
+		Name:    "access_token",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+		Secure:  false,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
+		Name:    "refresh_token",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+		Secure:  false,
 	})
 	http.SetCookie(w, &http.Cookie{
-		Name:     "user_id",
-		Value:    "",
-		Path:     "/",
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
+		Name:    "user_id",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+		Secure:  false,
 	})
 
 	w.WriteHeader(http.StatusOK)
