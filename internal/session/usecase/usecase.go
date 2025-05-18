@@ -9,7 +9,6 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	sessionDTO "github.com/lightlink/auth-service/internal/session/domain/dto"
-	"github.com/lightlink/auth-service/internal/session/domain/entity"
 	sessionEntity "github.com/lightlink/auth-service/internal/session/domain/entity"
 	sessionRepo "github.com/lightlink/auth-service/internal/session/repository"
 	userDTO "github.com/lightlink/auth-service/internal/user/domain/dto"
@@ -61,9 +60,8 @@ func (uc *SessionUsecase) Signup(signupRequest *sessionDTO.SignupRequest) (*sess
 		return nil, err
 	}
 
-	authDTO := sessionDTO.SignupRequestToAuthCredentialsDTO(signupRequest)
 	session, err := formSignedSession(
-		authDTO.Username,
+		signupRequest.Username,
 		createdUser.Id,
 		time.Now().Add(15*time.Minute), /*TODO*/
 		time.Now().Add(24*time.Hour),   /*TODO*/
@@ -110,9 +108,8 @@ func (uc *SessionUsecase) Login(loginRequest *sessionDTO.LoginRequest) (*session
 		return nil, err
 	}
 
-	authDTO := sessionDTO.LoginRequestToAuthCredentialsDTO(loginRequest)
 	session, err := formSignedSession(
-		authDTO.Username,
+		loginRequest.Username,
 		user.Id,
 		time.Now().Add(1*time.Minute), /*TODO*/
 		time.Now().Add(24*time.Hour),  /*TODO*/
@@ -216,7 +213,7 @@ func createJWT(username string, ttl time.Time, userID uint) (string, error) {
 	return tokenString, nil
 }
 
-func formSignedSession(username string, userID uint, accessTokenTTL time.Time, refreshTokenTTL time.Time) (*entity.Session, error) {
+func formSignedSession(username string, userID uint, accessTokenTTL time.Time, refreshTokenTTL time.Time) (*sessionEntity.Session, error) {
 	accessToken, err := createJWT(username, accessTokenTTL, userID)
 	if err != nil {
 		return nil, err
@@ -227,7 +224,7 @@ func formSignedSession(username string, userID uint, accessTokenTTL time.Time, r
 		return nil, err
 	}
 
-	return &entity.Session{
+	return &sessionEntity.Session{
 		JWTAccess:        accessToken,
 		JWTRefresh:       refreshToken,
 		UserID:           userID,

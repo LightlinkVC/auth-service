@@ -15,25 +15,6 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-type AuthCredentialsDTO struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-func LoginRequestToAuthCredentialsDTO(loginRequest *LoginRequest) *AuthCredentialsDTO {
-	return &AuthCredentialsDTO{
-		Username: loginRequest.Username,
-		Password: loginRequest.Password,
-	}
-}
-
-func SignupRequestToAuthCredentialsDTO(signupRequest *SignupRequest) *AuthCredentialsDTO {
-	return &AuthCredentialsDTO{
-		Username: signupRequest.Username,
-		Password: signupRequest.Password,
-	}
-}
-
 func SessionEntityToModel(sessionEntity *entity.Session) *model.Session {
 	return &model.Session{
 		JWTAccess:        sessionEntity.JWTAccess,
