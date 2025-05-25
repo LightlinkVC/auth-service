@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "github.com/lightlink/auth-service/protogen/user";
+
+message CreateUserRequest {
+    string username = 1;
+    string password_hash = 2;
+}
+
+message GetUserByIdRequest {
+    uint32 id = 1;
+}
+
+message GetUserByUsernameRequest {
+    string username = 1;
+}
+
+message GetUserResponse {
+    uint32 id = 1;
+    string username = 2;
+}
+
+// protoc --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative --proto_path=proto --go_out=protogen --go-grpc_out=protogen proto/user/user.proto
+service UserService {
+    rpc CreateUser (CreateUserRequest) returns (GetUserResponse);
+    rpc GetUserById (GetUserByIdRequest) returns (GetUserResponse);
+    rpc GetUserByUsername (GetUserByUsernameRequest) returns (GetUserResponse);
+}
